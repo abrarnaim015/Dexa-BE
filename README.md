@@ -1,17 +1,19 @@
-# Dexa Attendance Backend
+# Dexa Attendance Backend (Dexa-BE)
 
 Backend service for employee attendance management built with NestJS.
-
-This project was developed as part of a technical test with a focus on:
-
-- Stability
-- Clear business rules
-- Clean and controlled backend architecture
-- Non-breaking, incremental feature delivery
+This backend is developed as part of the Dexa Fullstack Technical Test, with a strong focus on stability, clear business rules, controlled architecture, and realistic backend design decisions.
 
 ---
 
-## Tech Stack
+## 1. Overview
+
+Dexa-BE provides a RESTful backend that supports employee attendance tracking, role-based access control, user profile management, admin monitoring features, and audit logging using a mocked message queue concept.
+
+The backend intentionally avoids over-engineering while still demonstrating clean architecture, event-driven thinking, and extensibility.
+
+---
+
+## 2. Tech Stack
 
 - Node.js v20
 - npm v9
@@ -19,118 +21,201 @@ This project was developed as part of a technical test with a focus on:
 - TypeORM
 - MySQL
 - JWT Authentication
-- bcrypt (password hashing)
+- bcrypt
+- Cloudinary (image storage)
+- dotenv
 
 ---
 
-## Project Overview
+## 3. Core Design Principles
 
-This backend provides:
-
-- User authentication (login & admin-only registration)
-- Role-based access control (EMPLOYEE & ADMIN)
-- Attendance management (check-in / check-out)
-- Admin attendance monitoring
-- User self-service profile update
-- Admin user management
-- JWT-protected APIs
-- Audit logging via mocked message queue
-- Soft delete support on all tables
-
-The implementation intentionally focuses on the required scope of the technical test and avoids over-engineering.
+- Clear and explicit business rules
+- Role-based access control enforced at controller level
+- Modular architecture with clear separation of concerns
+- Incremental, non-breaking feature delivery
+- No unnecessary infrastructure dependencies
+- Event-driven concept demonstrated via mocked message queue
 
 ---
 
-## Architecture Overview
+## 4. Project Structure
 
-- Monolithic backend with module-based separation (microservice-style)
-- Modules:
+```
+Dexa-BE
+.
+├── README.md
+├── nest-cli.json
+├── package-lock.json
+├── package.json
+├── src
+│   ├── app.controller.spec.ts
+│   ├── app.controller.ts
+│   ├── app.module.ts
+│   ├── app.service.ts
+│   ├── attendance
+│   │   ├── attendance.controller.ts
+│   │   ├── attendance.module.ts
+│   │   ├── attendance.service.spec.ts
+│   │   └── attendance.service.ts
+│   ├── audit
+│   │   ├── audit.controller.ts
+│   │   ├── audit.module.ts
+│   │   ├── audit.service.spec.ts
+│   │   └── audit.service.ts
+│   ├── auth
+│   │   ├── auth.controller.spec.ts
+│   │   ├── auth.controller.ts
+│   │   ├── auth.module.ts
+│   │   ├── auth.service.spec.ts
+│   │   ├── auth.service.ts
+│   │   ├── jwt-auth.guard.ts
+│   │   ├── jwt.strategy.ts
+│   │   ├── roles.decorator.ts
+│   │   └── roles.guard.ts
+│   ├── config
+│   │   └── cloudinary.config.ts
+│   ├── entities
+│   │   ├── attendance.entity.ts
+│   │   ├── audit-log.entity.ts
+│   │   └── user.entity.ts
+│   ├── main.ts
+│   ├── queue
+│   │   ├── queue.module.ts
+│   │   └── queue.service.ts
+│   ├── seeds
+│   │   └── admin.seed.ts
+│   └── user
+│       ├── cloudinary.service.ts
+│       ├── dto
+│       │   └── update-user.dto.ts
+│       ├── user.module.ts
+│       ├── user.service.spec.ts
+│       ├── user.service.ts
+│       └── users.controller.ts
+├── test
+│   ├── app.e2e-spec.ts
+│   └── jest-e2e.json
+├── tsconfig.build.json
+└── tsconfig.json
+```
+
+---
+
+## 5. Architecture Overview
+
+- Single backend application using modular design (microservice-style separation)
+- Modules include:
   - AuthModule
   - UsersModule
   - AttendanceModule
   - AuditModule
   - QueueModule (mocked)
-- Clear separation of concerns:
-  - Entity
-  - Service
+- Each module follows standard NestJS layering:
   - Controller
-- Controlled, step-by-step extension without breaking existing APIs
+  - Service
+  - Entity
+- No cross-module business logic leakage
 
 ---
 
-## Database Design
+## 6. Database Design
 
-Tables:
+### Tables
 
 - users
 - attendances
 - audit_logs
 
-Rules:
+### General Rules
 
-- All tables implement soft delete using `deletedAt`
-- TypeORM `synchronize` is enabled for development only
+- All tables use soft delete via `deletedAt`
+- TypeORM `synchronize` enabled for development only
+- Relations are explicitly defined using TypeORM decorators
 
-User roles:
+### User Roles
 
 - EMPLOYEE
 - ADMIN
 
 ---
 
-## Attendance Business Rules
+## 7. Authentication & Authorization
 
-- Check-in can only be done once per day
-- Check-out must be done after check-in
-- Check-out can only be done once
-- No handling for forgotten check-out (out of scope)
-- Attendance data is always tied to the authenticated user (JWT)
+### Authentication
+
+- JWT-based authentication
+- Token payload contains:
+  - userId
+  - role
+- Token is required for all protected endpoints
+
+### Authorization
+
+- Role-based access enforced using guards
+- ADMIN-only endpoints explicitly restricted
 
 ---
 
-## Requirements
+## 8. Attendance Business Rules
+
+- Check-in:
+  - Can only be done once per day
+- Check-out:
+  - Must be done after check-in
+  - Can only be done once
+- No handling for forgotten check-out (intentionally out of scope)
+- Attendance data is always scoped to authenticated user context
+
+---
+
+## 9. Environment Requirements
 
 - Node.js v20
 - npm v9
 - MySQL running locally
+- Cloudinary account (for profile photo feature)
 
 ---
 
-## Installation & Setup
+## 10. Installation & Setup
 
-### 1. Install dependencies
+### Install dependencies
 
-    npm install
+npm install
 
-### 2. Environment variables
+### Environment Variables
 
-Create a file `.env` in the project root (`Dexa-BE/.env`):
+Create a `.env` file in the project root:
 
-    DB_HOST=127.0.0.1
-    DB_PORT=3306
-    DB_USERNAME=
-    DB_PASSWORD=
-    DB_NAME=
-    JWT_SECRET=
-    NODE_ENV=development
+DB_HOST=127.0.0.1  
+DB_PORT=3306  
+DB_USERNAME=  
+DB_PASSWORD=  
+DB_NAME=  
+JWT_SECRET=  
+CLOUDINARY_CLOUD_NAME=  
+CLOUDINARY_API_KEY=  
+CLOUDINARY_API_SECRET=  
+NODE_ENV=development
 
 Notes:
 
-- TypeORM synchronize is enabled only for development
+- TypeORM synchronize is enabled only in development mode
+- Cloudinary credentials are required for profile photo upload
 
-### 3. Run application
+### Run Application
 
-    npm run start:dev
+npm run start:dev
 
 Expected output:
 
-    Nest application successfully started
+Nest application successfully started
 
 ---
 
-## Admin Seeder
+## 11. Admin Seeder
 
-An admin account is automatically created in development mode only.
+An admin account is automatically created in development mode.
 
 Default admin credentials:
 
@@ -138,278 +223,244 @@ Default admin credentials:
 - Password: admin123
 - Role: ADMIN
 
-Seeder behavior:
+Rules:
 
-- Runs only when `NODE_ENV=development`
-- Creates admin only if it does not already exist
+- Seeder runs only when NODE_ENV=development
+- Admin is created only if it does not already exist
+- Admin registration via API is not allowed
 
 ---
 
-## Authentication API
+## 12. Authentication API
 
 ### Login
 
-Endpoint:
-
-    POST /auth/login
+POST /auth/login
 
 Response:
 
-    {
-      "meta": {
-        "status": "success",
-        "message": "Login successful"
-      },
-      "data": {
-        "access_token": "JWT_TOKEN"
-      },
-      "errors": []
-    }
-
-Notes:
-
-- Login is available for all users
-- Returned access token must be used for authenticated requests
+- Returns JWT access token
+- Token must be used as Bearer token for protected APIs
 
 ---
 
-### Register (ADMIN ONLY)
+### Register User (ADMIN ONLY)
 
-Endpoint:
-
-    POST /auth/register
-
-Authorization:
-
-- Required
-- Bearer JWT token
-- User role MUST be ADMIN
-
-Response:
-
-    {
-      "meta": {
-        "status": "success",
-        "message": "User registered successfully"
-      },
-      "data": {
-        "id": 8,
-        "name": "Test User",
-        "email": "test@mail.com",
-        "role": "EMPLOYEE",
-        "createdAt": "2026-02-25T21:00:47.985Z",
-        "updatedAt": "2026-02-25T21:00:47.985Z"
-      },
-      "errors": []
-    }
-
-Important Rules:
-
-- Public user registration is DISABLED
-- Only ADMIN users can access this endpoint
-- This endpoint ALWAYS creates EMPLOYEE users
-- Creating ADMIN users via API is NOT allowed
-- ADMIN accounts are created only via seeder
-
----
-
-## User Profile API (JWT Required)
-
-### Update My Profile
-
-Endpoint:
-
-    PUT /users/me
-
-Capabilities:
-
-- Update phone number
-- Update password (with old password validation)
+POST /auth/register
 
 Rules:
 
-- User can update ONLY their own data
-- Old password must be provided to change password
-- Password is always hashed
+- ADMIN only
+- Always creates EMPLOYEE users
+- Public registration is disabled
+- Password is hashed before storage
 - Password is never returned in response
 
 ---
 
-## User Management API (ADMIN ONLY)
+## 13. User Profile APIs (JWT Required)
 
-### Get Users
+### Get My Profile
 
-Endpoint:
-
-    GET /users
-
-Optional query params:
-
-- name
-- id
+GET /users/me
 
 Returns:
 
-- List of users (basic info only)
+- User profile data
+- Password is never included
+
+---
+
+### Update My Profile
+
+PUT /users/me
+
+Capabilities:
+
+- Update phone number
+- Update password (optional)
+
+Rules:
+
+- User can update only their own profile
+- Old password is required only when changing password
+- Partial updates are supported
+- Password is always hashed
+- Password is never returned
+
+---
+
+### Update Profile Photo
+
+PUT /users/me/photo
+
+Flow:
+
+- Accept multipart/form-data
+- Backend uploads image to Cloudinary
+- Secure URL is stored in users.photo column
+- Updated user data is returned
+
+Rules:
+
+- Image type: PNG
+- Max file size enforced
+- Previous image can be removed
+- Cloudinary asset is deleted when photo is removed
+
+---
+
+## 14. User Management APIs (ADMIN ONLY)
+
+### Get Users
+
+GET /users
+
+Returns:
+
+- List of users
+- Basic profile info only
 - Password is never exposed
 
 ---
 
 ### Update User
 
-Endpoint:
-
-    PUT /users/:id
+PUT /users/:id
 
 Rules:
 
-- ADMIN ONLY
-- Can update basic user info (e.g. name, phone number)
+- ADMIN only
+- Can update name and phone number
 - Cannot update password via this endpoint
 
 ---
 
-## Attendance API (JWT Required)
+## 15. Attendance APIs (JWT Required)
 
 ### Check-in
 
-    POST /attendance/check-in
+POST /attendance/check-in
 
 Rules:
 
-- Can only be done once per day
-- Returns error if already checked in
+- One check-in per day
+- Error if already checked in
 
 ---
 
 ### Check-out
 
-    POST /attendance/check-out
+POST /attendance/check-out
 
 Rules:
 
 - Must have checked in first
-- Cannot check out more than once
+- Only one check-out allowed
 
 ---
 
 ### Get My Attendance
 
-    GET /attendance/me
+GET /attendance/me
 
 Returns:
 
-- Attendance records of the authenticated user
-- Sorted by date (latest first)
+- Attendance records for authenticated user
+- Sorted by date descending
+- Supports date range filtering
 
 ---
 
-## Attendance Monitoring (ADMIN ONLY)
+## 16. Attendance Monitoring (ADMIN ONLY)
 
-### Get All Attendance Records
-
-Endpoint:
-
-    GET /attendance
-
-Optional query params:
-
-- date=YYYY-MM-DD
-- userId
+GET /attendance
 
 Rules:
 
 - Read-only
 - Returns attendance records for all users
-- Includes basic user info (id, name, email)
+- Includes basic user info
+- Supports filtering by date and userId
 
 ---
 
-## Audit Logging
+## 17. Audit Logging System
 
-- Audit logging is implemented asynchronously
-- Uses a mocked message queue concept
-- Does not block core business logic
+Audit logging is implemented using an asynchronous, mocked message queue approach.
+
+### Logged Events
+
+- ATTENDANCE_CHECK_IN
+- ATTENDANCE_CHECK_OUT
+- USER_PROFILE_UPDATED
 
 ---
 
-## Message Queue (Mocked RabbitMQ Concept)
+## 18. Mocked Message Queue (RabbitMQ Concept)
 
-This project implements a mocked message queue to demonstrate event-driven architecture.
+This project demonstrates message queue usage without installing RabbitMQ.
 
-Design approach:
+Design:
 
-- No RabbitMQ server is installed
-- Queue is simulated using an in-memory async publisher-consumer
-- Focus is on architectural understanding, not infrastructure
+- Events are published via QueueService
+- Subscribers consume events asynchronously
+- Audit logs are persisted to audit_logs table
 
-Flow example:
-
-Attendance action  
+Flow:
+Business action  
 → Publish event  
 → Mocked QueueService  
 → Audit consumer  
-→ Save record to `audit_logs` table
+→ Save to database
 
-This fulfills the requirement:
-“Message queue implemented using RabbitMQ concept (simple / mocked)”
-
----
-
-## Error Handling
-
-- Authentication errors return HTTP 401
-- Authorization errors return HTTP 403
-- Invalid business rules return HTTP 400
-- Clear and explicit error messages
-- No generic `throw new Error` usage
+This fulfills the requirement of demonstrating message queue usage conceptually.
 
 ---
 
-## Security Notes
+## 19. Error Handling
+
+- 400: Business rule violations
+- 401: Authentication errors
+- 403: Authorization errors
+- Clear, explicit error messages
+- No generic error throwing
+
+---
+
+## 20. Security Notes
 
 - Passwords are hashed using bcrypt
-- JWT payload contains:
-  - userId
-  - role
-- Admin accounts cannot be registered publicly
+- JWT payload contains minimal required data
+- Admin privileges cannot be escalated via API
+- Sensitive fields are never returned in responses
 
 ---
 
-## Out of Scope (Intentional)
+## 21. Out of Scope (Intentional)
 
-- Refresh token
+- Refresh tokens
 - Email verification
 - Forgot password
-- Unit or e2e testing
+- Unit and e2e tests
 - Production migration strategy
 
-These features can be added later if required.
+These are intentionally excluded to keep the scope aligned with the technical test.
 
 ---
 
-## How to Test (Quick Guide)
-
-1. Start MySQL service
-2. Run backend using `npm run start:dev`
-3. Login as admin or employee
-4. Use Postman:
-   - Login to get JWT token
-   - Set Authorization header
-   - Test profile update, attendance, and admin endpoints
-
----
-
-## Notes for Reviewer
+## 22. Notes for Reviewer
 
 - Backend is developed incrementally with non-breaking changes
-- Core requirements are implemented first
-- Extensions are clearly separated and controlled
-- Clean module boundaries and readable business logic
-- Ready to be extended to real message queue infrastructure
+- Business rules are explicit and easy to follow
+- Event-driven architecture is demonstrated cleanly
+- Codebase is ready for extension to real message queue infrastructure
 
 ---
 
-## Author
+## 23. Final Notes
 
-Technical test implementation for Dexa
+This backend prioritizes correctness, clarity, and controlled design decisions.
+All features are implemented intentionally to meet the technical test requirements without unnecessary complexity.
+
+Thank you for reviewing this backend implementation.

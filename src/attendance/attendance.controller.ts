@@ -20,9 +20,25 @@ export class AttendanceController {
     return this.attendanceService.checkOut(req.user.userId);
   }
 
+  // @Get('me')
+  // getMyAttendance(@Req() req, @Query('date') date?: string) {
+  //   return this.attendanceService.findMyAttendance({
+  //     date,
+  //     userId: req.user.userId,
+  //   });
+  // }
+
   @Get('me')
-  getMyAttendance(@Req() req) {
-    return this.attendanceService.findMyAttendance(req.user.userId);
+  async getMyAttendance(
+    @Req() req,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.attendanceService.findMyAttendance({
+      userId: req.user.userId,
+      from,
+      to,
+    });
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

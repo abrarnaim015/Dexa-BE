@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Attendance } from '../entities/attendance.entity';
 import { QueueService } from 'src/queue/queue.service';
 
@@ -72,9 +72,25 @@ export class AttendanceService {
     return this.attendanceRepository.save(attendance);
   }
 
-  async findMyAttendance(userId: number) {
+  async findMyAttendance({
+    userId,
+    from,
+    to,
+  }: {
+    userId: number;
+    from?: string;
+    to?: string;
+  }) {
+    const where: any = {
+      user: { id: userId },
+    };
+
+    if (from && to) {
+      where.date = Between(from, to);
+    }
+
     return this.attendanceRepository.find({
-      where: { user: { id: userId } },
+      where,
       order: { date: 'DESC' },
     });
   }

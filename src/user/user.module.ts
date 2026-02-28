@@ -4,11 +4,12 @@ import { User } from '../entities/user.entity';
 import { UserService } from './user.service';
 import { UsersController } from './users.controller';
 import { QueueModule } from 'src/queue/queue.module';
+import { CloudinaryService } from './cloudinary.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), QueueModule],
-  providers: [UserService],
+  providers: [UserService, CloudinaryService],
   controllers: [UsersController],
-  exports: [UserService],
+  exports: [UserService, CloudinaryService],
 })
 export class UserModule {}

@@ -18,4 +18,13 @@ export class AuditService {
 
     await this.auditLogRepository.save(log);
   }
+
+  async findAll(limit = 20) {
+    return this.auditLogRepository.find({
+      where: { deletedAt: null },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+  }
 }

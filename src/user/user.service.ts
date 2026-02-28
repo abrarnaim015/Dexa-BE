@@ -9,6 +9,7 @@ import { User, UserRole } from '../entities/user.entity';
 import { QueueService } from 'src/queue/queue.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { CloudinaryService } from './cloudinary.service';
 
 @Injectable()
 export class UserService {
@@ -16,6 +17,7 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly queueService: QueueService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
   private today(): string {
     return new Date().toISOString().slice(0, 10);
@@ -32,6 +34,27 @@ export class UserService {
     });
 
     return this.userRepository.save(user);
+  }
+
+  async userMe(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    delete user.password;
+
+    return {
+      meta: {
+        status: 'success',
+        message: 'Get User successfully',
+      },
+      data: user,
+      errors: [],
+    };
   }
 
   async updateMe(userId: number, dto: UpdateUserDto) {
@@ -120,5 +143,80 @@ export class UserService {
       data: result,
       error: [],
     };
+  }
+
+  // async updateProfilePhoto(userId: number, file: Express.Multer.File) {
+  //   if (!file) {
+  //     throw new BadRequestException('Photo file is required');
+  //   }
+
+  //   if (file.mimetype !== 'image/png') {
+  //     throw new BadRequestException('Only PNG images are allowed');
+  //   }
+
+  //   if (file.size > 5 * 1024 * 1024) {
+  //     throw new BadRequestException('File size must be less than 5MB');
+  //   }
+
+  //   const imageUrl = await this.cloudinaryService.uploadImage(file);
+
+  //   const today = this.today();
+  //   this.queueService.publish('USER_PROFILE_UPDATED', {
+  //     userId: userId,
+  //     date: today,
+  //   });
+
+  //   await this.userRepository.update(userId, {
+  //     photo: imageUrl,
+  //   });
+
+  //   return { success: true };
+  // }
+
+  async updateProfilePhoto(userId: number, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Photo file is required');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    // 🔥 DELETE OLD PHOTO FIRST
+    if (user?.profile_photo_public_id) {
+      await this.cloudinaryService.deleteImage(user.profile_photo_public_id);
+    }
+
+    const { url, publicId } = await this.cloudinaryService.uploadImage(file);
+
+    await this.userRepository.update(userId, {
+      profile_photo_url: url,
+      profile_photo_public_id: publicId,
+    });
+
+    const today = this.today();
+    this.queueService.publish('USER_PROFILE_UPDATED', {
+      userId: userId,
+      date: today,
+    });
+
+    return { success: true };
+  }
+
+  async removeProfilePhoto(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (user?.profile_photo_public_id) {
+      await this.cloudinaryService.deleteImage(user.profile_photo_public_id);
+    }
+
+    await this.userRepository.update(userId, {
+      profile_photo_url: null,
+      profile_photo_public_id: null,
+    });
+
+    return { success: true };
   }
 }

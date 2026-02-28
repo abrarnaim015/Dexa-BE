@@ -4,10 +4,12 @@ import { AuditLog } from '../entities/audit-log.entity';
 import { AuditService } from './audit.service';
 import { QueueModule } from '../queue/queue.module';
 import { QueueService } from '../queue/queue.service';
+import { AuditController } from './audit.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog]), QueueModule],
   providers: [AuditService],
+  controllers: [AuditController],
 })
 export class AuditModule implements OnModuleInit {
   constructor(

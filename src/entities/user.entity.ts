@@ -39,7 +39,10 @@ export class User {
   phoneNumber?: string;
 
   @Column({ nullable: true })
-  photo?: string;
+  profile_photo_url?: string | null;
+
+  @Column({ nullable: true })
+  profile_photo_public_id?: string | null;
 
   @Column({ nullable: true })
   position?: string;
