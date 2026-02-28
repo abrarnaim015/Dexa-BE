@@ -20,14 +20,6 @@ export class AttendanceController {
     return this.attendanceService.checkOut(req.user.userId);
   }
 
-  // @Get('me')
-  // getMyAttendance(@Req() req, @Query('date') date?: string) {
-  //   return this.attendanceService.findMyAttendance({
-  //     date,
-  //     userId: req.user.userId,
-  //   });
-  // }
-
   @Get('me')
   async getMyAttendance(
     @Req() req,

@@ -145,34 +145,6 @@ export class UserService {
     };
   }
 
-  // async updateProfilePhoto(userId: number, file: Express.Multer.File) {
-  //   if (!file) {
-  //     throw new BadRequestException('Photo file is required');
-  //   }
-
-  //   if (file.mimetype !== 'image/png') {
-  //     throw new BadRequestException('Only PNG images are allowed');
-  //   }
-
-  //   if (file.size > 5 * 1024 * 1024) {
-  //     throw new BadRequestException('File size must be less than 5MB');
-  //   }
-
-  //   const imageUrl = await this.cloudinaryService.uploadImage(file);
-
-  //   const today = this.today();
-  //   this.queueService.publish('USER_PROFILE_UPDATED', {
-  //     userId: userId,
-  //     date: today,
-  //   });
-
-  //   await this.userRepository.update(userId, {
-  //     photo: imageUrl,
-  //   });
-
-  //   return { success: true };
-  // }
-
   async updateProfilePhoto(userId: number, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Photo file is required');
@@ -215,6 +187,12 @@ export class UserService {
     await this.userRepository.update(userId, {
       profile_photo_url: null,
       profile_photo_public_id: null,
+    });
+
+    const today = this.today();
+    this.queueService.publish('USER_PROFILE_UPDATED', {
+      userId: userId,
+      date: today,
     });
 
     return { success: true };
